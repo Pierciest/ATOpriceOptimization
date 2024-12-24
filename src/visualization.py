@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-
+import numpy as np
 def plot_revenue_vs_scenarios(scenario_steps, revenue_results):
     """
     Plot net revenue against the number of scenarios.
