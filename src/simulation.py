@@ -13,14 +13,37 @@ def generate_price_sets(price_min, price_max, num_samples):
     price_sets = samples * (np.array(price_max) - np.array(price_min)) + np.array(price_min)
     return price_sets
 
-def independent_price_demand(prices):
+def independent_price_demand(prices, base_demand_range=(300, 600), sensitivity_range=(1, 5), noise_std_range=(1, 3), min_demand_threshold=10):
+    """
+    Generate demand for products based on prices.
+
+    Parameters:
+        prices (array-like): Prices of the products.
+        base_demand_range (tuple): Range for base demand (min, max).
+        sensitivity_range (tuple): Range for sensitivity to price (min, max).
+        noise_std_range (tuple): Range for noise standard deviation (min, max).
+        min_demand_threshold (float): Minimum demand to prevent excessive zeros.
+
+    Returns:
+        np.ndarray: Non-negative demands for each product.
+    """
     n_products = len(prices)
-    base_demand = np.random.uniform(200, 400, size=n_products)
-    sensitivity = np.random.uniform(1, 5, size=n_products)
-    sigma = np.random.uniform(5, 15, size=n_products)
-    epsilon = np.random.normal(0, sigma, size=n_products)
-    demand = base_demand - sensitivity * prices + epsilon
-    return np.maximum(demand, 0)
+
+    # Generate base demand, sensitivity, and noise levels
+    base_demand = np.random.uniform(*base_demand_range, size=n_products)
+    sensitivity = np.random.uniform(*sensitivity_range, size=n_products)
+    noise_std = np.random.uniform(*noise_std_range, size=n_products)
+
+    # Generate random noise
+    noise = np.random.normal(0, noise_std, size=n_products)
+
+    # Calculate demand
+    demand = base_demand - sensitivity * prices + noise
+
+    # Apply minimum threshold for demand
+    demand = np.maximum(demand, min_demand_threshold)
+    return demand
+
 
 def generate_scenarios(prices, n_scenarios):
     scenario_demands = [independent_price_demand(prices) for _ in range(n_scenarios)]
@@ -69,8 +92,8 @@ def run_simulation(price_min, price_max, manufacturing_costs, num_price_samples,
 
     for i, price_set in enumerate(price_sets):
         for scenario in range(scenario_steps):
-            # Simulate demands (replace this with your demand function)
-            demands = np.random.uniform(100, 300, size=len(price_set))
+            # Simulate demands using the independent_price_demand function
+            demands = independent_price_demand(price_set)
             revenue = np.sum(demands * price_set) - np.sum(manufacturing_costs)
 
             # Append data
@@ -97,4 +120,5 @@ def run_simulation(price_min, price_max, manufacturing_costs, num_price_samples,
     avg_revenues_df = avg_revenues_df.merge(price_set_df, on="PriceSet", how="left")
 
     return avg_revenues_df, demand_df, scenario_revenues_df, uncut_revenues_df
+
 
