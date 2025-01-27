@@ -1,164 +1,132 @@
-# ATO Demand Analysis
+# Stochastic Optimization for Assemble-to-Order (ATO) Problem
 
-This repository contains an implementation of an **Assemble-to-Order (ATO) Demand Analysis** model for optimizing product prices to maximize revenue under stochastic demand scenarios. The model incorporates stochastic simulation, response surface modeling, and optimization techniques to derive actionable insights for price-demand management.
-
----
-
-## Project Structure
-
-```
-ATOdemandAnalysis/
-|
-├── instances/               # Contains instance-specific data
-│   ├── __init__.py         # Package initialization
-│   ├── coefficients.json   # Demand coefficients
-│
-├── settings/                # Global parameters
-│   ├── parameters.py       # Defines constants like scenario size and price range
-│
-├── solvers/                 # Core modules for the project
-│   ├── demand.py           # Stochastic demand generation
-│   ├── ato_model.py        # ATO model logic and constraints
-│   ├── response_surface.py # Response surface modeling and optimization
-│   ├── visualize.py        # Visualization utilities
-│
-├── example.ipynb            # Interactive exploration notebook
-├── tests/                   # Test modules
-│   ├── test_demand.py      # Unit tests for demand generation
-│   ├── test_model.py       # Unit tests for ATO model
-│   ├── test_response.py    # Unit tests for response surface
-│
-├── main.py                  # Main script to execute price-demand optimization
-├── main_stability.py        # Script to analyze in-sample and out-of-sample stability
-├── README.md                # Project overview (this file)
-└── requirements.txt         # Python dependencies
-```
+## Overview
+This project explores the use of stochastic optimization techniques to solve an Assemble-to-Order (ATO) problem. The key focus is on leveraging simulation and response surface methods to determine optimal pricing strategies while considering demand uncertainty and other stochastic factors.
 
 ---
 
 ## Features
+1. **Scenario Generation:**
+   - Uses moment matching and Wasserstein distance minimization techniques to generate scenarios that accurately represent demand distributions.
 
-### 1. Stochastic Demand Simulation
-- Simulates demand scenarios based on price sensitivity coefficients and randomness.
-- Outputs scenarios including prices, demands, and corresponding revenues.
+2. **Demand Simulation:**
+   - Implements linear demand models affected by price sensitivity, noise, and scenario-specific effects.
 
-### 2. Assemble-to-Order (ATO) Model
-- Implements ATO constraints such as component availability and demand fulfillment.
-- Simplifies optimization to focus on price-revenue dynamics.
+3. **Revenue Estimation:**
+   - Calculates revenue based on simulated demand data and given price combinations.
 
-### 3. Response Surface Modeling
-- Fits a regression model to approximate the relationship between prices and revenue.
-- Enables fast optimization for price decisions.
+4. **Surrogate Models:**
+   - Fits both polynomial regression and neural network models to approximate the revenue surface.
 
-### 4. Stability Analysis
-- **In-Sample Stability**: Evaluates consistency of solutions across independent scenario sets.
-- **Out-of-Sample Stability**: Tests optimized solutions on larger validation datasets.
+5. **Optimization:**
+   - Optimizes prices using surrogate models and evaluates them using scenario-based demand simulations.
 
-### 5. Visualization
-- Generates 3D surface plots and 2D contour maps for revenue as a function of prices.
+6. **Visualization:**
+   - 2D and 3D plots for analyzing revenue surfaces, contours, and scatter data for up to 3 products.
+   - Scalability analysis of runtime and revenue comparison.
 
 ---
 
-## Installation
+## File Structure
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Pierciest/ATOdemandAnalysis.git
-   cd ATOdemandAnalysis
-   ```
+```
+.
+├── stochastic_optimization.py   # Main class with all methods
+├── utils.py                     # Helper functions for sampling and visualization
+├── results/                     # Stores runtime, revenue comparisons, and visualizations
+├── 2products.ipynb              # Playground for 2 products analysis
+├── 3products.ipynb              # playground for 3 product analysis
+├── README.md                    # Project documentation (this file)
+└── requirements.txt             # Python dependencies
+```
 
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+---
+
+## Key Concepts
+
+### Assemble-to-Order (ATO) Problem
+In an ATO system, components are produced in advance and assembled into final products only after customer orders are received. This allows greater flexibility in responding to uncertain demand.
+
+### Stochastic Optimization
+Optimization under uncertainty is performed by:
+1. Generating scenarios to model possible outcomes.
+2. Optimizing decision variables to maximize expected revenue while accounting for the stochastic nature of demand.
+
+---
+
+## Methodology
+
+### 1. Scenario Generation
+Scenarios are created using:
+- **Moment Matching:** Ensures the scenarios match desired statistical properties (mean, variance, skewness, and kurtosis).
+- **Wasserstein Distance Minimization:** Refines scenarios to closely resemble a target distribution.
+
+### 2. Demand Simulation
+Simulates stochastic demand for products based on:
+- **Price Sensitivity:** Linear model linking demand to price.
+- **Scenario Effects:** Incorporates scenario-specific means and variances.
+- **Noise:** Adds randomness to mimic real-world variations.
+
+### 3. Revenue Surface Approximation
+Fits surrogate models to the simulated revenue data:
+- **Polynomial Regression:** Provides interpretable approximations of revenue surfaces.
+- **Neural Networks:** Captures complex, nonlinear relationships for more accurate predictions.
+
+### 4. Price Optimization
+Optimizes prices to maximize revenue by solving:
+- `max p R(p)` where `R(p)` is the revenue predicted by the surrogate model.
+
+### 5. Scalability and Analysis
+- Measures runtime as the number of products increases.
+- Compares revenue improvements from polynomial and neural network optimizations.
+
+---
+
+## Visualization
+- **2D Heatmaps and Contours:** For 2-product scenarios.
+- **3D Surface Plots:** For 2- and 3-product scenarios.
+- **Scalability Plots:** Runtime vs. number of products.
+- **Revenue Comparison Plots:** Baseline vs. optimized revenues (Polynomial and Neural Network models).
 
 ---
 
 ## Usage
 
-### **Price-Demand Optimization**
-Run the main script to simulate scenarios, build the response surface, and optimize prices:
-```bash
-python main.py
-```
+### Prerequisites
+1. Install Python 3.8+.
+2. Install required packages:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### **Stability Analysis**
-Analyze stability of results using `main_stability.py`:
-```bash
-python main_stability.py
-```
+### Running the Main Script
+1. Open `stochastic_optimization.py`.
+2. Modify the `product_list` variable to set the number of products to analyze.
+3. Run the script:
+   ```bash
+   python stochastic_optimization.py
+   ```
 
-### **Interactive Exploration**
-Use the `example.ipynb` notebook to explore scenarios, visualize surfaces, and fine-tune parameters interactively.
-
----
-
-## Parameters
-Modify the `settings/parameters.py` file to adjust global parameters:
-```python
-NUM_PRODUCTS = 2       # Number of products
-NUM_SCENARIOS = 100    # Number of demand scenarios
-SEED = 42              # Random seed for reproducibility
-PRICE_RANGE = (10, 50) # Range of product prices
-```
+### Output
+1. Simulation data and visualizations are saved in the `results/` folder.
+2. Runtime and revenue metrics are printed for each product count.
 
 ---
 
 ## Results
+### Scalability
+The runtime scales polynomially with the number of products due to increased dimensionality in price combinations.
 
-### Example Output from `main.py`:
-- **Optimal Prices**: `[35.4, 28.7]`
-- **Revenue Surface**:
-  - 3D plot showing how revenue changes with prices.
-  - 2D contour map highlighting optimal price regions.
-
-### Example Output from `main_stability.py`:
-- **In-Sample Stability**:
-  ```plaintext
-  In-Sample Stability for size 50: Avg Difference = 3.25
-  In-Sample Stability for size 100: Avg Difference = 1.57
-  ```
-- **Out-of-Sample Revenue**:
-  ```plaintext
-  Out-of-Sample Revenue (Validation): 3025.34
-  ```
+### Revenue Optimization
+- **Polynomial Models:** Efficient for moderately complex problems.
+- **Neural Networks:** Offer superior performance for high-dimensional problems.
 
 ---
 
-## Testing
-
-Run the test suite to validate functionality:
-```bash
-pytest tests/
-```
-
----
-
-## Dependencies
-- Python 3.8+
-- Key libraries:
-  - `numpy`
-  - `pandas`
-  - `matplotlib`
-  - `scikit-learn`
-  - `pytest` (for testing)
-
----
-
-## Future Enhancements
-- Extend the ATO model to include more complex constraints.
-- Implement advanced metamodeling techniques like neural networks.
-- Add interactive visualizations using Plotly.
+## Acknowledgments
+This project is based on lecture notes and coursework by Edoardo Fadda (Politecnico di Torino) on stochastic optimization and simulation methods.
 
 ---
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-## Contact
-For any questions or contributions, please reach out to:
-- **Name**: Pierciest
-- **GitHub**: [Pierciest](https://github.com/Pierciest)
-
+This project is licensed for educational and research purposes only. Redistribution or commercial use is prohibited.
