@@ -1,132 +1,101 @@
 # Stochastic Optimization for Assemble-to-Order (ATO) Problem
 
 ## Overview
-This project explores the use of stochastic optimization techniques to solve an Assemble-to-Order (ATO) problem. The key focus is on leveraging simulation and response surface methods to determine optimal pricing strategies while considering demand uncertainty and other stochastic factors.
 
----
+This project presents a metamodel-based framework for **profit-maximizing price optimization** in Assemble-to-Order (ATO) systems under demand uncertainty. By integrating scenario generation, explicit inventory feasibility, and response-surface surrogates, we balance realism (component costs and stock constraints) with computational tractability.
 
 ## Features
+
 1. **Scenario Generation:**
-   - Uses moment matching and Wasserstein distance minimization techniques to generate scenarios that accurately represent demand distributions.
 
-2. **Demand Simulation:**
-   - Implements linear demand models affected by price sensitivity, noise, and scenario-specific effects.
+   * Create demand scenarios via moment matching to match target moments (mean, variance, skewness, kurtosis).
+   * Refine scenarios by minimizing empirical Wasserstein distance to a target distribution.
 
-3. **Revenue Estimation:**
-   - Calculates revenue based on simulated demand data and given price combinations.
+2. **Inventory Management:**
 
-4. **Surrogate Models:**
-   - Fits both polynomial regression and neural network models to approximate the revenue surface.
+   * InventoryManager tracks component stock levels and enforces feasibility constraints during simulation.
+   * Calculates per-unit production costs based on component usage and flags infeasible assemblies.
 
-5. **Optimization:**
-   - Optimizes prices using surrogate models and evaluates them using scenario-based demand simulations.
+3. **Demand Simulation:**
 
-6. **Visualization:**
-   - 2D and 3D plots for analyzing revenue surfaces, contours, and scatter data for up to 3 products.
-   - Scalability analysis of runtime and revenue comparison.
+   * Linear price–demand model with additive noise and scenario-specific effects.
+   * Simulates stochastic demand under each scenario, subject to inventory availability.
 
----
+4. **Profit Estimation & Scenario Stability:**
+
+   * Compute sample-average profit: (∑\_j (P\_j - c\_j) d\_j), subtracting per-unit component costs.
+   * Adaptive sample-size selection and tolerance-based checks ensure stability of profit estimates across scenarios.
+
+5. **Surrogate Modeling:**
+
+   * Fit polynomial regression (degree min(3, J)) and neural-network (MLPRegressor) metamodels to the simulated profit surface.
+
+6. **Optimization:**
+
+   * Maximize surrogate-predicted profit over feasible price bounds using scipy.optimize.minimize (L-BFGS-B with SLSQP fallback).
+   * Impose feasibility penalties for inventory violations or prices below production cost.
+
+7. **Visualization:**
+
+   * 2D heatmaps, contour plots, and 3D surface/scatter visualizations for 2- and 3-product cases.
+   * Scalability plots: runtime vs. number of products.
+   * Profit comparison plots: enumerated/sampled vs. optimized (polynomial and neural net).
 
 ## File Structure
 
 ```
 .
-├── stochastic_optimization.py   # Main class with all methods
+├── ato.py   # Main class with all methods
 ├── utils.py                     # Helper functions for sampling and visualization
 ├── results/                     # Stores runtime, revenue comparisons, and visualizations
 ├── 2products.ipynb              # Playground for 2 products analysis
 ├── 3products.ipynb              # playground for 3 product analysis
 ├── README.md                    # Project documentation (this file)
 └── requirements.txt             # Python dependencies
+└── stochastic_opt.pdf           # Report
 ```
-
----
 
 ## Key Concepts
 
-### Assemble-to-Order (ATO) Problem
-In an ATO system, components are produced in advance and assembled into final products only after customer orders are received. This allows greater flexibility in responding to uncertain demand.
-
-### Stochastic Optimization
-Optimization under uncertainty is performed by:
-1. Generating scenarios to model possible outcomes.
-2. Optimizing decision variables to maximize expected revenue while accounting for the stochastic nature of demand.
-
----
+* **Assemble-to-Order (ATO):** Components are stocked in advance; final products assemble upon order, allowing flexibility but requiring inventory management.
+* **Stochastic Optimization:** Decision variables (prices) optimized against random demand scenarios to maximize expected profit.
+* **Response-Surface Methods:** Fit inexpensive surrogate models to expensive profit evaluations and optimize these surrogates efficiently.
 
 ## Methodology
 
-### 1. Scenario Generation
-Scenarios are created using:
-- **Moment Matching:** Ensures the scenarios match desired statistical properties (mean, variance, skewness, and kurtosis).
-- **Wasserstein Distance Minimization:** Refines scenarios to closely resemble a target distribution.
-
-### 2. Demand Simulation
-Simulates stochastic demand for products based on:
-- **Price Sensitivity:** Linear model linking demand to price.
-- **Scenario Effects:** Incorporates scenario-specific means and variances.
-- **Noise:** Adds randomness to mimic real-world variations.
-
-### 3. Revenue Surface Approximation
-Fits surrogate models to the simulated revenue data:
-- **Polynomial Regression:** Provides interpretable approximations of revenue surfaces.
-- **Neural Networks:** Captures complex, nonlinear relationships for more accurate predictions.
-
-### 4. Price Optimization
-Optimizes prices to maximize revenue by solving:
-- `max p R(p)` where `R(p)` is the revenue predicted by the surrogate model.
-
-### 5. Scalability and Analysis
-- Measures runtime as the number of products increases.
-- Compares revenue improvements from polynomial and neural network optimizations.
-
----
-
-## Visualization
-- **2D Heatmaps and Contours:** For 2-product scenarios.
-- **3D Surface Plots:** For 2- and 3-product scenarios.
-- **Scalability Plots:** Runtime vs. number of products.
-- **Revenue Comparison Plots:** Baseline vs. optimized revenues (Polynomial and Neural Network models).
-
----
+1. **Generate Scenarios:** Moment matching → Wasserstein-distance refinement → adaptive sample-size selection for stability.
+2. **Simulate Profit:** For each price vector, simulate demand under scenarios, enforce inventory, and compute sample-average profit.
+3. **Fit Metamodels:** Polynomial regression and neural-network surrogates approximate the profit surface.
+4. **Optimize Surrogates:** Find price vectors maximizing surrogate predictions, applying penalties for infeasibility.
+5. **Validate:** Re-evaluate optimized prices on fresh demand scenarios to estimate true expected profit gains.
+6. **Scale:** Repeat for product counts $J=2$ through $J=10$, using full enumeration for $J\le4$ and random sampling for higher dimensions.
 
 ## Usage
 
-### Prerequisites
-1. Install Python 3.8+.
-2. Install required packages:
+1. **Prerequisites:** Python 3.8+ and required packages:
+
    ```bash
    pip install -r requirements.txt
    ```
+2. **Run the optimization:**
 
-### Running the Main Script
-1. Open `stochastic_optimization.py`.
-2. Modify the `product_list` variable to set the number of products to analyze.
-3. Run the script:
    ```bash
-   python stochastic_optimization.py
+   python ato.py
    ```
+3. **Outputs:**
 
-### Output
-1. Simulation data and visualizations are saved in the `results/` folder.
-2. Runtime and revenue metrics are printed for each product count.
-
----
+   * Profit and runtime summaries printed to the console for each $J$.
+   * Interactive plots display heatmaps, surfaces, and runtime/profit comparison charts.
 
 ## Results
-### Scalability
-The runtime scales polynomially with the number of products due to increased dimensionality in price combinations.
 
-### Revenue Optimization
-- **Polynomial Models:** Efficient for moderately complex problems.
-- **Neural Networks:** Offer superior performance for high-dimensional problems.
-
----
+* **Profit Improvements:** Polynomial surrogates consistently yield 1–2% profit gains over raw enumeration or sampling; neural networks provide comparable performance in low-dimensional cases.
+* **Scalability:** Full enumeration is tractable up to $J=4$; random sampling scales the framework up to $J=10$ with runtimes under 6 minutes.
 
 ## Acknowledgments
-This project is based on lecture notes and coursework by Edoardo Fadda (Politecnico di Torino) on stochastic optimization and simulation methods.
 
----
+Based on lecture notes and coursework by Edoardo Fadda (Politecnico di Torino) and the paper “Stochastic Optimization for ATO Problems Using Surface Response Methods” by Köse et al., Politecnico di Torino.
 
 ## License
-This project is licensed for educational and research purposes only. Redistribution or commercial use is prohibited.
+
+This work is licensed for educational and research purposes only. Redistribution or commercial use is prohibited.
