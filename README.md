@@ -92,10 +92,6 @@ This project presents a metamodel-based framework for **profit-maximizing price 
 * **Profit Improvements:** Polynomial surrogates consistently yield 1–2% profit gains over raw enumeration or sampling; neural networks provide comparable performance in low-dimensional cases.
 * **Scalability:** Full enumeration is tractable up to $J=4$; random sampling scales the framework up to $J=10$ with runtimes under 6 minutes.
 
-## Acknowledgments
-
-Based on lecture notes and coursework by Edoardo Fadda (Politecnico di Torino) and the paper “Stochastic Optimization for ATO Problems Using Surface Response Methods” by Köse et al., Politecnico di Torino.
-
 ## License
 
 This work is licensed for educational and research purposes only. Redistribution or commercial use is prohibited.
